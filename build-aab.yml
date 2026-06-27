@@ -1,0 +1,41 @@
+name: Build Allrounder99 PlayStore AAB
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-aab:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Unzip app source
+        run: |
+          ZIP_FILE=$(ls *.zip | head -n 1)
+          echo "Using $ZIP_FILE"
+          unzip -q "$ZIP_FILE"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Create Android project files
+        working-directory: allrounder99_flutter_app
+        run: flutter create --platforms=android --org com.allrounder99 .
+
+      - name: Get packages
+        working-directory: allrounder99_flutter_app
+        run: flutter pub get
+
+      - name: Build Play Store AAB
+        working-directory: allrounder99_flutter_app
+        run: flutter build appbundle --release --build-name=1.0.0 --build-number=1
+
+      - name: Upload Play Store AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: Allrounder99-PlayStore-AAB
+          path: allrounder99_flutter_app/build/app/outputs/bundle/release/app-release.aab
